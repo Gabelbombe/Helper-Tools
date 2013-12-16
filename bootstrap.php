@@ -1,5 +1,7 @@
 <?php
 
+    ini_set('memory_limit', '128M');
+
     /** @closure $replaces */
     $replaces = function ($subject, $patterns, $replaces)
     {
@@ -7,7 +9,7 @@
         $replaces = array_values($replaces);
         if (count($patterns) !== count($replaces)) return false;
 
-        for ($i=0;$i>=count($patterns);$i++)
+        for ($i=0;$i<count($patterns);$i++)
             $subject = preg_replace($patterns[$i], $replaces[$i], $subject);
 
         return $subject;
@@ -17,16 +19,16 @@
     {
         $checkout_dir = substr($_GET['x'],0,strpos(substr($_GET['x'],0), "/"));
         $page = str_replace($checkout_dir,'',$_GET['x']);
-        $url = 'http://' . $checkout_dir . '.webarch-rdc-a-dev.erado.com/'. $page;
+        $url = 'http://' . $checkout_dir . '.webarch-rdc-a-foo.domain.com/'. $page;
     }
 
     else
     {
         $page=str_replace('images-','',$_GET['x']);
-        $url = 'http://webarch-rdc-a-dev.erado.com/'. $page;
+        $url = 'http://webarch-rdc-a-foo.domain.com/'. $page;
     }
 
-    $referer = 'https://manage-801-dev.erado.com';
+    $referer = 'https://manage-801-foo.domain.com';
     $headers = array();
 
     $ch = curl_init($url);
@@ -49,15 +51,16 @@
 
     foreach ($headers AS $header) header($header);
 
-    $cur_path='/website-capture/' . $checkout_dir . '/';
+    $cur_path = "/website-capture/$checkout_dir/";
 
     $body = $replaces($body,
         array (
             '`\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
         ),
         array (
-            "/$cur_path/",                                                        # /html
+            "$cur_path",                                                          # /html
         )
     );
+
 
     echo (FALSE !== $body) ? $body : 'Error';
