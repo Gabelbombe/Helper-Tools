@@ -1,34 +1,24 @@
 <?php
 
-    /** @closure $replaces */
-    $replaces = function ($subject, $patterns, $replaces)
-    {
-        $patterns = array_values($patterns);
-        $replaces = array_values($replaces);
-        if (count($patterns) !== count($replaces)) return false;
-
-        for ($i=0;$i<count($patterns);$i++)
-
-            $subject = preg_replace($patterns[$i], $replaces[$i], $subject);
-
-        return $subject;
-    };
+    $cdir = FALSE;
 
     if (FALSE === strpos($_GET['x'], 'images-'))
     {
-        $checkout_dir = substr($_GET['x'],0,strpos(substr($_GET['x'],0), "/"));
-        $page = str_replace($checkout_dir,'',$_GET['x']);
-        $url = 'http://' . $checkout_dir . '.webarch-rdc-a-dev.erado.com/'. $page;
+        $cdir = substr($_GET['x'],0,strpos(substr($_GET['x'],0), "/"));
+        $page = str_replace($cdir,'',$_GET['x']);
+        $url = "http://{$cdir}.webarch-rdc-a-dev.erado.com/{$page}";
     }
 
     else
     {
-        $page=str_replace('images-','',$_GET['x']);
-        $url = 'http://webarch-rdc-a-dev.erado.com/'. $page;
+        $page = str_replace('images-','',$_GET['x']);
+        $url = preg_replace('~(?<!\:)\/\/~', '/', "http://webarch-rdc-a-dev.erado.com/{$page}");
     }
+
 
     $referer = 'https://manage-801-dev.erado.com';
     $headers = array();
+
 
     $ch = curl_init($url);
     curl_setopt_array($ch, array (
@@ -43,13 +33,13 @@
 
     $data = curl_exec($ch); // should Throw on empty...
 
-    if (empty($data))
+    if (FALSE === curl_exec($ch) || empty($data))
     {
-        Throw New RuntimeException('Request invalid; halting compiler'); die;
+        Throw New RuntimeException('Request invalid; halting compiler, Curl error' . print_r(curl_error($ch),1));
     }
 
     curl_close($ch);
-    unset($ch);
+    unset($ch); // free
 
 
     list($headers, $body) = explode("\r\n\r\n", $data, 2);
@@ -63,17 +53,24 @@
         if (! stripos($header, 'length', 8)) header($header); // ignore length, we will create our own
     }
 
-    $cur_path = "/website-capture/$checkout_dir/";
 
-    $body = $replaces($body,
+    // avoid double slashed urls
+    $cpath = ($cdir)
+        ? "/website-capture/$cdir/"
+        : "/website-capture/";
+
+
+    $body = preg_replace(
         array (
-            '`<script\b(?>[^<]++|<(?!/script))*</script>(*SKIP)(?!)|\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
-            '`\b(?::url)\s*\(\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',            # css
+            '~(?<!\.)\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))~i',    # html
+            '`\b(?::url)\s*\(\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',              # css
+            '~\/\/~'
         ),
         array (
-            $cur_path,                                                            # /html
-            $cur_path,                                                            # /css
-        )
-    );
+            $cpath,     # /html
+            $cpath,     # /css
+            '/'
+        ),
+    $body);
 
-    echo (FALSE !== $body) ? $body : 'Error';
+    echo (FALSE === $body) ?: $body;
