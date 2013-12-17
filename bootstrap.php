@@ -1,4 +1,5 @@
 <?php
+
     /** @closure $replaces */
     $replaces = function ($subject, $patterns, $replaces)
     {
@@ -7,25 +8,26 @@
         if (count($patterns) !== count($replaces)) return false;
 
         for ($i=0;$i<count($patterns);$i++)
+
             $subject = preg_replace($patterns[$i], $replaces[$i], $subject);
 
         return $subject;
     };
 
-    if(FALSE === strpos($_GET['x'], 'images-'))
+    if (FALSE === strpos($_GET['x'], 'images-'))
     {
         $checkout_dir = substr($_GET['x'],0,strpos(substr($_GET['x'],0), "/"));
         $page = str_replace($checkout_dir,'',$_GET['x']);
-        $url = 'http://' . $checkout_dir . '.webarch-rdc-a-foo.domain.com/'. $page;
+        $url = 'http://' . $checkout_dir . '.webarch-rdc-a-dev.erado.com/'. $page;
     }
 
     else
     {
         $page=str_replace('images-','',$_GET['x']);
-        $url = 'http://webarch-rdc-a-foo.domain.com/'. $page;
+        $url = 'http://webarch-rdc-a-dev.erado.com/'. $page;
     }
 
-    $referer = 'https://manage-801-foo.domain.com';
+    $referer = 'https://manage-801-dev.erado.com';
     $headers = array();
 
     $ch = curl_init($url);
@@ -61,15 +63,16 @@
         if (! stripos($header, 'length', 8)) header($header); // ignore length, we will create our own
     }
 
-
     $cur_path = "/website-capture/$checkout_dir/";
 
     $body = $replaces($body,
         array (
             '`\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
+            '`\b(?::url)\s*\(\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',            # css
         ),
         array (
-            $cur_path,                                                          # /html
+            $cur_path,                                                            # /html
+            $cur_path,                                                            # /css
         )
     );
 
