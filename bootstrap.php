@@ -67,7 +67,7 @@
 
     $body = $replaces($body,
         array (
-            '`\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
+            '`<script\b(?>[^<]++|<(?!/script))*</script>(*SKIP)(?!)|\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
             '`\b(?::url)\s*\(\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',            # css
         ),
         array (
