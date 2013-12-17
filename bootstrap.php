@@ -1,7 +1,4 @@
 <?php
-
-    ini_set('memory_limit', '128M');
-
     /** @closure $replaces */
     $replaces = function ($subject, $patterns, $replaces)
     {
@@ -43,13 +40,27 @@
     ));
 
     $data = curl_exec($ch); // should Throw on empty...
+
+    if (empty($data))
+    {
+        Throw New RuntimeException('Request invalid; halting compiler'); die;
+    }
+
     curl_close($ch);
+    unset($ch);
+
 
     list($headers, $body) = explode("\r\n\r\n", $data, 2);
 
+
         $headers = explode("\r\n", $headers);
 
-    foreach ($headers AS $header) header($header);
+
+    foreach ($headers AS $header)
+    {
+        if (! stripos($header, 'length', 8)) header($header); // ignore length, we will create our own
+    }
+
 
     $cur_path = "/website-capture/$checkout_dir/";
 
@@ -58,9 +69,8 @@
             '`\b(?:href|src)\s*=\s*(["\']?+)\K(?:/(?!/)|(?=[\s>]|\1))`i',         # html
         ),
         array (
-            "$cur_path",                                                          # /html
+            $cur_path,                                                          # /html
         )
     );
-
 
     echo (FALSE !== $body) ? $body : 'Error';
