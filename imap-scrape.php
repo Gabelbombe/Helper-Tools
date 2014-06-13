@@ -6,8 +6,8 @@ Namespace MAPReader
 	{
 
 		protected 	$headers 	= [],
-					$bodies		= [],
-					$counts		= [],
+                    $bodies		= [],
+                    $counts		= [],
                     $mb         = null;
 
         public      $host       = false,
