@@ -5,10 +5,13 @@ Namespace MAPReader
     Class IMap
     {
 
-        protected     $headers     = [],
-                    $bodies        = [],
-                    $counts        = [],
+        protected   $headers    = [],
+                    $bodies     = [],
+                    $counts     = [],
                     $mb         = null;
+
+        private     $resource   = null,
+                    $list       = null;
 
         public      $host       = false,
                     $port       = false,
@@ -27,18 +30,25 @@ Namespace MAPReader
                     break;
                 }
             }
+
+            $this->resource = "{{$this->host}:{$this->port}}"; // create our IMap resource
         }
 
         /**
          * Open IMap loop
          *
          * @return $this
+         * @throws \HttpRequestPoolException
          */
         public function open()
         {
-            $this->mb = imap_open("{$this->host}:{$this->port}/imap", $this->user, $this->pass);
+            try {
+                $this->mb = imap_open($this->resource, $this->user, $this->pass, OP_HALFOPEN);
+            } catch (\Exception $e) {
+                Throw New \HttpRequestPoolException("Pool issue: ".  print_r($e, 1) . "Logged with error: " . imap_last_error());
+            }
 
-                return $this;
+            return $this;
         }
 
         /**
@@ -50,6 +60,19 @@ Namespace MAPReader
         {
             return imap_close($this->mb);
         }
+
+        public function available()
+        {
+            if (isset($this->mb) && is_resource($this->mb))
+            {
+                // bitches about void function return vals
+                $this->list = imap_list($this->mb, $this->resource, "*");
+            }
+
+            return $this;
+        }
+
+
 
         /**
          * Read and set headers/bodies
@@ -91,6 +114,15 @@ Namespace MAPReader
             }
 
             return $this;
+        }
+
+
+        /**
+         * @return null
+         */
+        public function getMailboxList()
+        {
+            return $this->list;
         }
 
         /**
