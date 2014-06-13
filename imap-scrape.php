@@ -4,7 +4,6 @@ Namespace MAPReader
 {
     Class IMap
     {
-
         protected   $headers    = [],
                     $bodies     = [],
                     $counts     = [],
@@ -118,11 +117,34 @@ Namespace MAPReader
 
 
         /**
-         * @return null
+         * What do you have there sir?
+         *
+         * @return array|null
          */
-        public function getMailboxList()
+        public function getMailbox()
         {
             return $this->list;
+        }
+
+
+        /**
+         * Verbose implementation of the above
+         *
+         * @return $this
+         */
+        public function listMailbox()
+        {
+            if (isset($this->list) && ! empty($this->list))
+            {
+                header('Content-type: text/plain');
+
+                foreach ($this->list AS $value)
+                {
+                    echo "{$value}n";
+                }
+            }
+
+            return $this;
         }
 
         /**
