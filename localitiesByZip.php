@@ -3,6 +3,7 @@
 error_reporting(-1);
 ini_set('display_errors', 1);
 
+
 $localitiesMap      =
 $blackList          =
 $stringList         = [];
@@ -42,7 +43,20 @@ foreach (explode("\n", file_get_contents('data/ZipCodePlus4.txt')) AS $data)
             $blackList[] = $arr;
         }
 
-
+// trap
 if (! empty($blackList)) echo "Locality(s) not implemented: " . print_r($blackList, 1);
+
+    //Locality(s) not implemented: Array
+    //(
+    //    [0] => Array
+    //        (
+    //            [0] => 55467
+    //            [1] => 0001
+    //            [2] => 9999
+    //            [3] => MN
+    //            [4] => HENNEPIN CO
+    //        )
+    //
+    //)
 
     file_put_contents('data/flmt_locality_by_zip.txt', implode("\n", $stringList), LOCK_EX);
